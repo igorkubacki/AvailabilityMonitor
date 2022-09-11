@@ -1,0 +1,131 @@
+﻿@model X.PagedList.IPagedList<AvailabilityMonitor.Models.Product>
+@using X.PagedList.Mvc.Core
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<script type="text/javascript">
+window.updateSorting = function(e) {
+    var url = window.location.href;
+    var paramName = 'sortOrder';
+    var pattern = new RegExp('\\b('+paramName+'=).*?(&|#|$)');
+    if (url.indexOf('?') > 0){
+        
+    }else{
+        url += '?sortOrder=' + e.value;
+    }
+    window.location.href = url;
+}
+</script>
+<script>
+    function AddSupplierInfo()
+{
+   $.ajax({
+      url: 'https://localhost:5000/Products/AddSupplierInfo',
+   }).done(function() {
+      alert('Done'); 
+   });
+}
+</script>
+
+<script>
+// When the user clicks on <div>, open the popup
+function myFunction() {
+  var popup = document.getElementById("myPopup");
+  popup.classList.toggle("show");
+}
+</script>
+
+
+<div class="popup" onclick="myFunction()">Click me!
+  <span class="popuptext" id="myPopup">Popup text...</span>
+</div>
+
+
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a> | 
+    <a asp-action="AddProducts">Import</a> |
+    <a onclick="AddSupplierInfo()">Add supplier info</a>
+</p>
+<label for="sortby">Sort by:</label>
+<select name="sortby" id="sortby" onchange="updateSorting(this)">
+    <optgroup label="Sort by">
+        <option value="id">PrestaShop ID</option>
+        <option value="name">Name</option>
+        <option value="quantity">Quantity</option>
+        <option value="price">Price</option>
+    </optgroup>
+    <optgroup label="Sort order">
+        <option value="">Ascending</option>
+        <option value="_desc">Descending</option>
+    </optgroup>
+</select>
+
+<p>
+    @using (Html.BeginForm(FormMethod.Get))
+    {
+        <label for="nameInput">Name</label>@Html.TextBox("name")
+        <label>Index</label>@Html.TextBox("index")
+        <label>PrestaShop ID</label>@Html.TextBox("prestashopId")
+        <label>Price</label>@Html.TextBox("priceFrom") @Html.TextBox("priceTo")
+        <label>Quantity</label>@Html.TextBox("quantityFrom") @Html.TextBox("quantityTo")
+        <input type="submit" value="Apply filters"/>
+        
+    }
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                NAME, ID, SKU
+            </th>
+            <th>
+                QUANTITY
+            </th>
+            <th>
+                Wholesale price
+            </th>
+            <th>
+                Retail price
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                <a asp-action="Details" asp-route-id="@item.ProductId">
+                    @Html.DisplayFor(modelItem => item.Name)
+                </a>
+                <br>
+                ID @Html.DisplayFor(modelItem => item.PrestashopId) |
+                SKU @Html.DisplayFor(modelItem => item.Index) 
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Quantity)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SupplierWholesalePrice)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RetailPrice)
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+<br />
+
+Displaying page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount (@Model.FirstItemOnPage-@Model.LastItemOnPage from @Model.TotalItemCount products)
+
+@Html.PagedListPager(Model, page => Url.Action("Index", 
+    new { page, sortOrder = ViewBag.CurrentSort, currentFilter = ViewBag.CurrentFilter }), 
+    new X.PagedList.Web.Common.PagedListRenderOptions{
+        LiElementClasses = new string[] {"page-item"},
+        PageClasses = new string[] {"page-link"}
+    })

@@ -1,0 +1,57 @@
+﻿@model IEnumerable<AvailabilityMonitor.Models.PriceChange>
+
+@{
+    ViewData["Title"] = "Index";
+
+    IEnumerable<PriceChange>? priceChanges = ViewData["PriceChanges"] as IEnumerable<PriceChange>;
+    // IEnumerable<QuantityNotification>? quantityNotifications = ViewData["QuantityNotifications"] as IEnumerable<QuantityNotification>;
+}
+
+<h1>Notifications</h1>
+
+@if(priceChanges.Count() > 0)
+{  
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Product name
+                </th>
+                <th>
+                    Change type
+                </th>
+                <th>
+                    Previous price
+                </th>
+                <th>
+                    New price
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+    @foreach (PriceChange change in priceChanges) {
+            <tr>
+                <td>
+                    <a asp-action="Details" asp-route-id="@change.ProductId">
+                        @change.product.Name
+                    </a>
+                </td>
+                <td>
+                    Product retail price has changed
+                </td>
+                <td>
+                    @change.PreviousPrice
+                </td>
+                <td>
+                    @change.NewPrice
+                </td>
+            </tr>
+    }
+        </tbody>
+    </table>
+}
+else{
+    <div style="text-align:center;">
+        <a>There aren't any notifications at the moment</a>
+    </div>
+}

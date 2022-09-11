@@ -1,0 +1,46 @@
+﻿@model AvailabilityMonitor.Models.Config
+
+@{
+    ViewData["Title"] = "AddProducts";
+}
+
+<h1>AddProducts</h1>
+
+<h4>Import settings</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form>
+            <p>Import type</p>
+            <div class="form-group">
+                <!--Html.RadioButtonFor(o => o.importType, "PrestaShop API") PrestaShop API-->
+            </div>
+            <div class="form-group">
+                <!--Html.RadioButtonFor(o => o.importType, "Supplier CSV file") Supplier CSV file -->
+            </div>
+
+            <button onclick="Import()">Import</button>
+            @Html.ActionLink(actionName: "ImportProducts", controllerName:"Products", linkText: "Start")
+            <br>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+<script>
+    function Import()
+{
+   $.ajax({
+      url: 'https://localhost:5000/Products/ImportProducts',
+   }).done(function() {
+      alert('Done'); 
+   });
+}
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
