@@ -5,8 +5,6 @@ namespace AvailabilityMonitor.Models
 {
     public class Config
     {
-        private readonly ApplicationDbContext _context;
-
         [Key]
         public int id { get; set; }
         [DataType(DataType.Url)]

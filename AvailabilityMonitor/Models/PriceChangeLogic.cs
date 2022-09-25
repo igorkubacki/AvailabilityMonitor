@@ -16,7 +16,7 @@
         }
         public void InsertPriceChange(PriceChange priceChange)
         {
-            _context.Add(priceChange);
+            _context.PriceChange.Add(priceChange);
         }
         public bool IsPriceChangeEmpty()
         {

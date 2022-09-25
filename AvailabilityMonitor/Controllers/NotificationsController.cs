@@ -1,92 +1,53 @@
 ﻿using AvailabilityMonitor.Data;
+using AvailabilityMonitor.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AvailabilityMonitor.Controllers
 {
     public class Notifications : Controller
     {
-        private ApplicationDbContext _context;
+        private BusinessLogic _businessLogic;
         public Notifications(ApplicationDbContext context)
         {
-            _context = context;
+            this._businessLogic = new BusinessLogic(context);
         }
 
         // GET: Notifications
         public ActionResult Index()
         {
-            ViewData["PriceChanges"] = _context.PriceChange.ToList();
-            ViewData["QuantityChanges"] = _context.QuantityChange.ToList();
+            ViewData["PriceChanges"] = _businessLogic.GetAllPriceChanges().Where(p => p.IsNotificationRead == false);
+            ViewData["QuantityChanges"] = _businessLogic.GetAllQuantityChanges().Where(p => p.IsNotificationRead == false);
             
             return View();
         }
 
-        // GET: Notifications/Details/5
-        public ActionResult Details(int id)
+        public void MarkPriceChangeAsRead(int id)
         {
-            return View();
+            _businessLogic.GetPriceChangeById(id).IsNotificationRead = true;
+            _businessLogic.Save();
+        }
+        
+        public void MarkQuantityChangeAsRead(int id)
+        {
+            _businessLogic.GetQuantityChangeById(id).IsNotificationRead = true;
+            _businessLogic.Save();
         }
 
-        // GET: Notifications/Create
-        public ActionResult Create()
+        public void MarkAllChangesAsRead()
         {
-            return View();
-        }
+            IEnumerable<PriceChange>? priceChanges = _businessLogic.GetAllPriceChanges();
+            IEnumerable<QuantityChange>? quantityChanges = _businessLogic.GetAllQuantityChanges();
 
-        // POST: Notifications/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
+            foreach(PriceChange change in priceChanges)
             {
-                return RedirectToAction(nameof(Index));
+                change.IsNotificationRead = true;
             }
-            catch
+            foreach(QuantityChange change in quantityChanges)
             {
-                return View();
+                change.IsNotificationRead = true;
             }
-        }
 
-        // GET: Notifications/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: Notifications/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: Notifications/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: Notifications/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            _businessLogic.Save();
         }
     }
 }

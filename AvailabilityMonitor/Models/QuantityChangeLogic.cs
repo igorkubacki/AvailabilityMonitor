@@ -16,7 +16,7 @@
         }
         public void InsertQuantityChange(QuantityChange quantityChange)
         {
-            _context.Add(quantityChange);
+            _context.QuantityChange.Add(quantityChange);
         }
         public bool IsQuantityChangeEmpty()
         {

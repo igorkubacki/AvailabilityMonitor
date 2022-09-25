@@ -15,12 +15,13 @@ namespace AvailabilityMonitor.Models
         public int ProductId { get; set; }
         public virtual Product? product { get; set; }
 
-        public QuantityChange(int productId, int previousQuantity, int newQuantity, DateTime dateTime)
+        public QuantityChange(int productId, int previousQuantity, int newQuantity, DateTime dateTime, bool isNotificationRead)
         {
             ProductId = productId;
             PreviousQuantity = previousQuantity;
             NewQuantity = newQuantity;
             DateTime = dateTime;
+            IsNotificationRead = isNotificationRead;
         }
     }
 }

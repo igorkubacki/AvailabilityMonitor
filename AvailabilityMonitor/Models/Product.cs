@@ -20,14 +20,16 @@ namespace AvailabilityMonitor.Models
         public int Quantity { get; set; }
         public int? SupplierQuantity { get; set; }
         public int StockavailableId { get; set; }
-        public bool IsVisible { get; set; }
+        public string? AvailabilityLabel { get; set; }
+        public bool? IsVisible { get; set; }
         [ForeignKey("ProductId")]
         public virtual ICollection<PriceChange>? PriceChanges { get; set; }
         [ForeignKey("ProductId")]
         public virtual ICollection<QuantityChange>? QuantityChanges { get; set; }
 
 
-        public Product(int prestashopId, string index, string name, string photoURL, int stockavailableId, int quantity, float retailPrice)
+        public Product(int prestashopId, string index, string name, string photoURL, int stockavailableId, 
+            int quantity, float retailPrice, string availabilityLabel)
         {
             PrestashopId = prestashopId;
             Index = index;
@@ -36,6 +38,7 @@ namespace AvailabilityMonitor.Models
             StockavailableId = stockavailableId;
             Quantity = quantity;
             RetailPrice = retailPrice;
+            AvailabilityLabel = availabilityLabel;
         }
 
         

@@ -1,91 +1,117 @@
 ﻿@model X.PagedList.IPagedList<AvailabilityMonitor.Models.Product>
 @using X.PagedList.Mvc.Core
+@using System.Web.Mvc.Ajax
 
 @{
     ViewData["Title"] = "Index";
+    int i = 0;
+    string color;
 }
 
-<script type="text/javascript">
-window.updateSorting = function(e) {
-    var url = window.location.href;
-    var paramName = 'sortOrder';
-    var pattern = new RegExp('\\b('+paramName+'=).*?(&|#|$)');
-    if (url.indexOf('?') > 0){
-        
-    }else{
-        url += '?sortOrder=' + e.value;
-    }
-    window.location.href = url;
-}
-</script>
-<script>
-    function AddSupplierInfo()
-{
-   $.ajax({
-      url: 'https://localhost:5000/Products/AddSupplierInfo',
-   }).done(function() {
-      alert('Done'); 
-   });
-}
-</script>
-
-<script>
-// When the user clicks on <div>, open the popup
-function myFunction() {
-  var popup = document.getElementById("myPopup");
-  popup.classList.toggle("show");
-}
-</script>
-
-
-<div class="popup" onclick="myFunction()">Click me!
-  <span class="popuptext" id="myPopup">Popup text...</span>
+<div id="importInfo" class="import-popup">
+    <span id="importMessage"></span>
 </div>
 
+<div class="table-container">
 
-
-<h1>Index</h1>
-
+<div class="buttons-top">
+    <h1>Products</h1>
+    <input id="import-button" type="button" value="Import/update products from PrestaShop" onclick="startImport()" class="filters-button filters-button-import"/>
+    <input id="update-button" type="button" value="Update supplier info" onclick="startUpdate()" class="filters-button filters-button-add"/>
+</div>
 <p>
-    <a asp-action="Create">Create New</a> | 
-    <a asp-action="AddProducts">Import</a> |
-    <a onclick="AddSupplierInfo()">Add supplier info</a>
-</p>
-<label for="sortby">Sort by:</label>
-<select name="sortby" id="sortby" onchange="updateSorting(this)">
-    <optgroup label="Sort by">
-        <option value="id">PrestaShop ID</option>
-        <option value="name">Name</option>
-        <option value="quantity">Quantity</option>
-        <option value="price">Price</option>
-    </optgroup>
-    <optgroup label="Sort order">
-        <option value="">Ascending</option>
-        <option value="_desc">Descending</option>
-    </optgroup>
-</select>
-
-<p>
-    @using (Html.BeginForm(FormMethod.Get))
+    @using (Html.BeginForm(FormMethod.Get, htmlAttributes: new {id = "filter-form"}))
     {
-        <label for="nameInput">Name</label>@Html.TextBox("name")
-        <label>Index</label>@Html.TextBox("index")
-        <label>PrestaShop ID</label>@Html.TextBox("prestashopId")
-        <label>Price</label>@Html.TextBox("priceFrom") @Html.TextBox("priceTo")
-        <label>Quantity</label>@Html.TextBox("quantityFrom") @Html.TextBox("quantityTo")
-        <input type="submit" value="Apply filters"/>
-        
+        <div class="filters-input-area">
+            <hr style="margin-bottom: -5px;">
+            
+            <div class="filters-container">
+                <label for="name" class="filters-input-label">Name</label>
+                @Html.TextBox("name", null, new { id = "name"})
+            </div>
+            <div class="filters-container">
+                <label for="index" class="filters-input-label" >Index</label>
+                @Html.TextBox("index", null, new { id = "index"})
+            </div>
+            <div class="filters-container">
+                <label for="prestashopId" class="filters-input-label">PrestaShop ID</label>
+                @Html.TextBox("prestashopId", null, new { id = "prestashopId", onkeypress = "return event.charCode >= 48 && event.charCode <= 57"})
+            </div>
+            <div class="filters-container-double-left">
+                <label for="priceFrom" class="filters-input-label">Price from</label>
+                @Html.TextBox("priceFrom", null, new { id = "priceFrom", onkeypress = "return event.charCode >= 48 && event.charCode <= 57"}) 
+            </div>
+
+            <div class="filters-container-double-right">
+                <label for="priceTo" class="filters-input-label">to</label> 
+                @Html.TextBox("priceTo", null, new { id = "priceTo", onkeypress = "return event.charCode >= 48 && event.charCode <= 57"})
+            </div>
+            <div class="filters-container-double-left">
+                <label for="quantityFrom" class="filters-input-label">Quantity from</label>
+                @Html.TextBox("quantityFrom", null, new { id = "quantityFrom", onkeypress = "return event.charCode >= 48 && event.charCode <= 57"}) 
+            </div>
+
+            <div class="filters-container-double-right">
+                <label for="quantityTo" class="filters-input-label">to</label>
+                @Html.TextBox("quantityTo", null, new { id = "quantityTo", onkeypress = "return event.charCode >= 48 && event.charCode <= 57"})
+            </div>
+        </div>
+        <div class="buttons-bottom">
+            <input type="submit" value="Apply filters" class="filters-button filters-button-apply "/>
+            <input type="button" onclick="clearFilters()" value="Clear filters" class="filters-button filters-button-clear"/>
+            <select name="sortBy" id="sortBySelect" onchange="updateSorting(this)"  class="filters-button filters-button-sorting">
+                <option style="text-align:center;">Sorting</option>
+                <option value="id">ID: low to high</option>
+                <option value="id_desc">ID: high to low</option>
+                <option value="name">Name: A-Z</option>
+                <option value="name_desc">Name: Z-A</option>
+                <option value="quantity">Quantity: low to high</option>
+                <option value="quantity_desc">Quantity: high to low</option>
+                <option value="price">Price: low to high</option>
+                <option value="price_desc">Price: high to low</option>
+            </select>
+            <div class="page-switch">
+                Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of 
+                @Model.PageCount (@Model.FirstItemOnPage-@Model.LastItemOnPage from @Model.TotalItemCount products)
+            
+                @Html.PagedListPager(Model, page => Url.Action("Index", 
+                    new { page, sortOrder = ViewBag.CurrentSort, currentFilter = ViewBag.CurrentFilter }), 
+                    new X.PagedList.Web.Common.PagedListRenderOptions{
+                        LiElementClasses = new string[] {"page-item"},
+                        PageClasses = new string[] {"page-link"}
+                    })
+            </div>
+        </div>
     }
 </p>
+        
 
 <table class="table">
     <thead>
         <tr>
+            <th colspan="2" style="border-bottom: none"></th>
+            <th colspan="2" style="text-align: center">
+                Ours
+            </th>
+            <th colspan="3" style="text-align: center">
+                Supplier's
+            </th>
+        </tr>
+        <tr>
             <th>
-                NAME, ID, SKU
+                Photo
+            </th>
+            <th style="width: 40%">
+                Name, ID, SKU
             </th>
             <th>
-                QUANTITY
+                Quantity
+            </th>
+            <th style="text-align: right">
+                Retail price
+            </th>
+            <th>
+                Quantity
             </th>
             <th>
                 Wholesale price
@@ -97,30 +123,60 @@ function myFunction() {
     </thead>
     <tbody>
 @foreach (var item in Model) {
-        <tr>
+        {
+            i++;
+            if(i % 2 == 0){
+                color = "#fafafa";
+            }
+            else {
+                color = "#fff";
+            }
+        }
+            <tr style="background-color: @color">
             <td>
-                <a asp-action="Details" asp-route-id="@item.ProductId">
+                <div  class="popup" style="padding-top: 2px;" onmouseover="zoomPhoto(@item.ProductId)" onmouseout="zoomPhoto(@item.ProductId)">
+                    <span id="photo-@item.ProductId" class="popupphoto" ><img class="image-zoomed" src="@item.PhotoURL" /></span>
+                    <img class="image-small" src="@item.PhotoURL" />
+                </div>
+                
+            </td>
+            <td>
+                <a asp-action="Details" asp-route-id="@item.ProductId" class="title">
                     @Html.DisplayFor(modelItem => item.Name)
                 </a>
                 <br>
                 ID @Html.DisplayFor(modelItem => item.PrestashopId) |
-                SKU @Html.DisplayFor(modelItem => item.Index) 
+                SKU <span id="indexValue-@item.ProductId">@Html.DisplayFor(modelItem => item.Index)</span>
+                <div class="popup" onmouseover="indexTooltip(@item.ProductId)" onmouseout="indexTooltip(@item.ProductId)">
+                    <i class="fa-regular fa-copy copy-icon" onclick="copyIndex(@item.ProductId)"></i>
+                    <span id="index-@item.ProductId" class="popuptext">Click to copy</span>
+                </div>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Quantity)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.SupplierWholesalePrice)
+            <td style="text-align: right">
+                @Html.DisplayFor(modelItem => item.RetailPrice) PLN
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.RetailPrice)
+                @Html.DisplayFor(modelItem => item.SupplierQuantity)
+            </td>
+            <td>
+                @if (item.SupplierWholesalePrice != null){
+                    @Html.DisplayFor(modelItem => item.SupplierWholesalePrice);
+                    <text> PLN</text>
+                }
+            </td>
+            <td>
+                @if(item.SupplierRetailPrice != null){
+                    @Html.DisplayFor(modelItem => item.SupplierRetailPrice);
+                    <text> PLN</text>
+                }
             </td>
         </tr>
 }
     </tbody>
 </table>
-<br />
-
 Displaying page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount (@Model.FirstItemOnPage-@Model.LastItemOnPage from @Model.TotalItemCount products)
 
 @Html.PagedListPager(Model, page => Url.Action("Index", 
@@ -129,3 +185,4 @@ Displaying page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of 
         LiElementClasses = new string[] {"page-item"},
         PageClasses = new string[] {"page-link"}
     })
+</div>

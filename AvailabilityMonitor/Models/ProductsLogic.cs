@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Xml;
+using Microsoft.AspNet.SignalR;
+using RealTimeProgressBar;
+using System.Web.Mvc;
 
 namespace AvailabilityMonitor.Models
 {
@@ -19,7 +22,7 @@ namespace AvailabilityMonitor.Models
         {
             return _context.Product.ToList();
         }
-        public Product GetProductById(int id)
+        public Product? GetProductById(int id)
         {
             return _context.Product.Find(id);
         }
@@ -49,11 +52,13 @@ namespace AvailabilityMonitor.Models
         {
             _context.Add(product);
         }
-        public void DeleteProduct(int productId)
+        public void DeleteProduct(int? productId)
         {
-            Product? product = _context.Product.Find(productId);
-            if(product != null)
-                _context.Product.Remove(product);
+            if(productId != null)
+            {
+                _context.Product.Remove(_context.Product.Find(productId));
+                Save();
+            }
         }
         public void UpdateProduct(Product product)
         {
@@ -84,22 +89,21 @@ namespace AvailabilityMonitor.Models
         {
             Task<HttpResponseMessage>? request = client.GetAsync("stock_availables/" + stockavailableId + "?ws_key=" + config.prestaApiKey);
             request.Wait();
-            HttpResponseMessage response = request.Result;
+            HttpResponseMessage result = request.Result;
 
-            if (response.IsSuccessStatusCode)
+            if (result.IsSuccessStatusCode)
             {
-                XmlDocument xmlDocument = await ResponseIntoXml(response);
+                XmlDocument xmlDocument = await ResponseIntoXml(result);
 
                 return int.Parse(xmlDocument.GetElementsByTagName("quantity").Item(0).InnerText);
             }
             else
             {
-                return -1;
+                throw new BadHttpRequestException("Status code " + result.StatusCode.ToString() + " - " + result.ReasonPhrase);
             }
         }
         public async Task ImportNewProductsFromPresta()
         {
-
             Config? config = GetConfig();
 
             if (config is null)
@@ -115,9 +119,149 @@ namespace AvailabilityMonitor.Models
 
             // getting all products id's
 
-            Task<HttpResponseMessage>? response = client.GetAsync("products/?ws_key=" + config.prestaApiKey);
-            response.Wait();
-            HttpResponseMessage? result = response.Result;
+            Task<HttpResponseMessage>? request = client.GetAsync("products/?ws_key=" + config.prestaApiKey);
+            request.Wait();
+            HttpResponseMessage? result = request.Result;
+
+            if (result.IsSuccessStatusCode)
+            {
+                XmlDocument AllProductsXML = await ResponseIntoXml(result);
+
+                int i = 0;
+
+                foreach (XmlNode node in AllProductsXML.ChildNodes.Item(1).ChildNodes.Item(0).ChildNodes)
+                {
+                    i++;
+
+                    int productId = int.Parse(node.Attributes[0].Value);
+
+                    Task<HttpResponseMessage>? productRequest = client.GetAsync("products/" + productId + "?ws_key=" + config.prestaApiKey);
+                    productRequest.Wait();
+                    HttpResponseMessage? productResult = productRequest.Result;
+
+                    if (productResult.IsSuccessStatusCode)
+                    {
+                        XmlDocument productInfoXML = await ResponseIntoXml(productResult);
+
+                        // Skip product if it's not displayed in PrestaShop.
+                        if (productInfoXML.GetElementsByTagName("active").Item(0).InnerText == "0")
+                        {
+                            continue;
+                        }
+
+                        string index = productInfoXML.GetElementsByTagName("reference").Item(0).InnerText;
+                        string name = productInfoXML.GetElementsByTagName("name").Item(0).ChildNodes.Item(0).InnerText;
+                        string photoURL = config.prestaShopUrl + "/" + productInfoXML.GetElementsByTagName("id_default_image").Item(0).InnerText
+                            + "-home_default/p.jpg";
+                        string availabilityLabel = productInfoXML.GetElementsByTagName("available_now").Item(0).ChildNodes.Item(0).InnerText;
+                        int stockavailableId = int.Parse(productInfoXML.GetElementsByTagName("stock_available").Item(0).ChildNodes.Item(0).InnerText);
+                        int quantity = await GetPrestaQuantity(client, config, stockavailableId);
+                        float retailPrice = (float)1.23 * float.Parse(productInfoXML.GetElementsByTagName("price").Item(0).InnerText, CultureInfo.InvariantCulture);
+                        retailPrice = Convert.ToSingle(retailPrice);
+                        
+                        // Checking if product is already added. If it is, add it, in other case, update.
+                        if (_context.Product.Any(p => p.PrestashopId == productId))
+                        {
+                            Product product = _context.Product.Where(p => p.PrestashopId == productId).First();
+
+                            product.Index = index;
+                            product.Name = name;
+                            product.PhotoURL = photoURL;
+                            product.AvailabilityLabel = availabilityLabel;
+                            product.StockavailableId = stockavailableId;
+                            product.Quantity = quantity;
+                            product.RetailPrice = retailPrice;
+                            Save();
+                        }
+                        else
+                        {
+                            _context.Product.Add(new Product(productId, index, name, photoURL, stockavailableId, quantity, retailPrice, availabilityLabel));
+                        }
+                    }
+                    else
+                    {
+                        throw new BadHttpRequestException("Status code " + productResult.StatusCode.ToString() + " - " + productResult.ReasonPhrase);
+                    }
+                    if(i % 10 == 0) Save();
+                }
+            }
+
+            else
+            {
+                throw new BadHttpRequestException("Status code " + result.StatusCode.ToString() + " - " + result.ReasonPhrase);
+            }
+            client.Dispose();
+            return;
+        }
+
+        public async Task UpdateProductFromPresta(int id)
+        {
+            Config? config = GetConfig();
+
+            if (config is null)
+            {
+                return;
+            }
+
+            Product? product = GetProductById(id);
+
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri(config.prestaShopUrl + "/api/");
+
+            client.DefaultRequestHeaders.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/xml"));
+
+            Task<HttpResponseMessage>? request = client.GetAsync("products/" + product.PrestashopId + "?ws_key=" + config.prestaApiKey);
+            request.Wait();
+            HttpResponseMessage? result = request.Result;
+
+            if (result.IsSuccessStatusCode)
+            {
+                XmlDocument productInfoXML = await ResponseIntoXml(result);
+
+                string index = productInfoXML.GetElementsByTagName("reference").Item(0).InnerText;
+                string name = productInfoXML.GetElementsByTagName("name").Item(0).ChildNodes.Item(0).InnerText;
+                string photoURL = config.prestaShopUrl + "/" + productInfoXML.GetElementsByTagName("id_default_image").Item(0).InnerText
+                    + "-home_default/p.jpg";
+                string availabilityLabel = productInfoXML.GetElementsByTagName("available_now").Item(0).ChildNodes.Item(0).InnerText;
+                int stockavailableId = int.Parse(productInfoXML.GetElementsByTagName("stock_available").Item(0).ChildNodes.Item(0).InnerText);
+                int quantity = await GetPrestaQuantity(client, config, stockavailableId);
+                float retailPrice = (float)1.23 * float.Parse(productInfoXML.GetElementsByTagName("price").Item(0).InnerText, CultureInfo.InvariantCulture);
+                retailPrice = Convert.ToSingle(retailPrice);
+
+                product.Index = index;
+                product.Name = name;
+                product.PhotoURL = photoURL;
+                product.AvailabilityLabel = availabilityLabel;
+                product.StockavailableId = stockavailableId;
+                product.Quantity = quantity;
+                product.RetailPrice = retailPrice;
+            }
+            else
+            {
+                throw new BadHttpRequestException("Status code " + result.StatusCode.ToString() + " - " + result.ReasonPhrase);
+            }
+            Save();
+        }
+
+        public async Task UpdateProductsFromPresta()
+        {
+            Config? config = GetConfig();
+
+            if (config is null)
+            {
+                return;
+            }
+
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri(config.prestaShopUrl + "/api/");
+
+            client.DefaultRequestHeaders.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/xml"));
+
+            Task<HttpResponseMessage>? request = client.GetAsync("products/?ws_key=" + config.prestaApiKey);
+            request.Wait();
+            HttpResponseMessage? result = request.Result;
 
             if (result.IsSuccessStatusCode)
             {
@@ -129,39 +273,44 @@ namespace AvailabilityMonitor.Models
                 {
                     int productId = int.Parse(node.Attributes[0].Value);
 
-                    // Checking if product is already added.
-                    if (_context.Product.Any(p => p.PrestashopId == productId))
+                    Product? product = _context.Product.Where(p => p.PrestashopId == productId).First();
+
+                    // Checking if product with specified id exists in db. If not, skip.
+                    if (product is null)
                     {
                         continue;
                     }
-                    Task<HttpResponseMessage>? productResponse = client.GetAsync("products/" + productId + "?ws_key=" + config.prestaApiKey);
-                    productResponse.Wait();
-                    HttpResponseMessage? productResponseResult = productResponse.Result;
 
-                    if (productResponseResult.IsSuccessStatusCode)
+                    Task<HttpResponseMessage>? productRequest = client.GetAsync("products/" + productId + "?ws_key=" + config.prestaApiKey);
+                    productRequest.Wait();
+                    HttpResponseMessage? productResult = productRequest.Result;
+
+                    if (productResult.IsSuccessStatusCode)
                     {
-                        XmlDocument productInfoXML = await ResponseIntoXml(productResponseResult);
-
-                                                // Skip product if it's not displayed in PrestaShop.
-                        if (productInfoXML.GetElementsByTagName("active").Item(0).InnerText == "0")
-                        {
-                            continue;
-                        }
+                        XmlDocument productInfoXML = await ResponseIntoXml(productResult);
 
                         string index = productInfoXML.GetElementsByTagName("reference").Item(0).InnerText;
                         string name = productInfoXML.GetElementsByTagName("name").Item(0).ChildNodes.Item(0).InnerText;
                         string photoURL = config.prestaShopUrl + "/" + productInfoXML.GetElementsByTagName("id_default_image").Item(0).InnerText
                             + "-home_default/p.jpg";
+                        string availabilityLabel = productInfoXML.GetElementsByTagName("available_now").Item(0).ChildNodes.Item(0).InnerText;
                         int stockavailableId = int.Parse(productInfoXML.GetElementsByTagName("stock_available").Item(0).ChildNodes.Item(0).InnerText);
                         int quantity = await GetPrestaQuantity(client, config, stockavailableId);
                         float retailPrice = (float)1.23 * float.Parse(productInfoXML.GetElementsByTagName("price").Item(0).InnerText, CultureInfo.InvariantCulture);
                         retailPrice = Convert.ToSingle(retailPrice);
-                        _context.Product.Add(new Product(productId, index, name, photoURL, stockavailableId, quantity, retailPrice));
+
+                        product.Index = index;
+                        product.Name = name;
+                        product.PhotoURL = photoURL;
+                        product.AvailabilityLabel = availabilityLabel;
+                        product.StockavailableId = stockavailableId;
+                        product.Quantity = quantity;
+                        product.RetailPrice = retailPrice;
+
                     }
                     else
                     {
-                        throw new NotImplementedException();
-                        // Console.WriteLine("{0} ({1})", (int)request.StatusCode, request.ReasonPhrase);
+                        throw new BadHttpRequestException("Status code " + productResult.StatusCode.ToString() + " - " + productResult.ReasonPhrase);
                     }
                     i++;
                     if (i % 10 == 0) Save();
@@ -171,13 +320,13 @@ namespace AvailabilityMonitor.Models
 
             else
             {
-                throw new NotImplementedException();
-                // Console.WriteLine("{0} ({1})", (int)request.StatusCode, request.ReasonPhrase);
+                throw new BadHttpRequestException("Status code " + result.StatusCode.ToString() + " - " + result.ReasonPhrase);
             }
             client.Dispose();
             return;
+
         }
-        public async Task<bool> UpdateInfoFromXmlFile()
+        public async Task<bool> UpdateSupplierInfo()
         {
             Config? config = GetConfig();
 
@@ -190,30 +339,35 @@ namespace AvailabilityMonitor.Models
 
             Task<HttpResponseMessage>? request = client.GetAsync(config.supplierFileUrl);
             request.Wait();
-            HttpResponseMessage? response = request.Result;
+            HttpResponseMessage? result = request.Result;
 
-            if (response.IsSuccessStatusCode)
+            if (result.IsSuccessStatusCode)
             {
-                XmlDocument supplierProducts = await ResponseIntoXml(response);
-                XmlNodeList? indexes = supplierProducts.GetElementsByTagName("Kod");
+                XmlDocument supplierProducts = await ResponseIntoXml(result);
+                XmlNodeList? indexNodes = supplierProducts.GetElementsByTagName("Kod");
 
                 IEnumerable<Product>? products = GetAllProducts();
 
 
                 foreach (Product product in products)
                 {
-                    foreach (XmlNode node in indexes)
+                    foreach (XmlNode node in indexNodes)
                     {
                         var index = node.InnerText.Trim();
                         if (product.Index == index)
                         {
                             XmlNode? supplierProduct = node.ParentNode;
 
-                            UpdateProductSupplierInfo(product, supplierProduct);
+                            await UpdateProductSupplierInfo(product, supplierProduct);
+                            break;
                         }
                     }
                 }
                 Save();
+            }
+            else
+            {
+                throw new BadHttpRequestException("Status code " + result.StatusCode.ToString() + " - " + result.ReasonPhrase);
             }
             return true;
         }
@@ -230,11 +384,11 @@ namespace AvailabilityMonitor.Models
 
             Task<HttpResponseMessage>? request = client.GetAsync(config.supplierFileUrl);
             request.Wait();
-            HttpResponseMessage? response = request.Result;
+            HttpResponseMessage? result = request.Result;
 
-            if (response.IsSuccessStatusCode)
+            if (result.IsSuccessStatusCode)
             {
-                XmlDocument supplierProducts = await ResponseIntoXml(response);
+                XmlDocument supplierProducts = await ResponseIntoXml(result);
                 XmlNodeList? indexes = supplierProducts.GetElementsByTagName("Kod");
 
                 Product? product = GetProductById(productId);
@@ -253,23 +407,50 @@ namespace AvailabilityMonitor.Models
                     }
                 }
             }
+            else
+            {
+                throw new BadHttpRequestException("Status code " + result.StatusCode.ToString() + " - " + result.ReasonPhrase);
+            }
 
             return true;
         }
         private async Task UpdateProductSupplierInfo(Product product, XmlNode node)
         {
-            product.SupplierQuantity = int.Parse(node.ChildNodes.Item(8).InnerText.Trim());
+            int supplierQuantity = int.Parse(node.ChildNodes.Item(8).InnerText.Trim());
+            // If value is different than the previous one, create a change object.
+            if(product.SupplierQuantity != supplierQuantity && product.SupplierQuantity != null)
+            {
+                InsertQuantityChange(new QuantityChange(product.ProductId, (int)product.SupplierQuantity, supplierQuantity, DateTime.Now, false));
+            }
+            // If it's first import, then create a change.
+            if(product.SupplierQuantity == null)
+            {
+                InsertQuantityChange(new QuantityChange(product.ProductId, 0, supplierQuantity, DateTime.Now, true));
+                
+            }
+            product.SupplierQuantity = supplierQuantity;
 
-            product.SupplierWholesalePrice = float.Parse(node.ChildNodes.Item(5).InnerText.Trim(), CultureInfo.InvariantCulture);
 
             float supplierRetailPrice = float.Parse(node.ChildNodes.Item(7).InnerText.Trim(), CultureInfo.InvariantCulture);
+            // If value is different than the previous one, create a change object.
             if (product.SupplierRetailPrice != supplierRetailPrice && product.SupplierRetailPrice != null)
             {
-                InsertPriceChange(new PriceChange(product.ProductId, (float)product.SupplierRetailPrice, supplierRetailPrice, DateTime.Now));
+                InsertPriceChange(new PriceChange(product.ProductId, (float)product.SupplierRetailPrice, supplierRetailPrice, DateTime.Now, false));
+            }
+            // If it's first import, then create a change.
+            if (product.SupplierRetailPrice == null)
+            {
+                InsertPriceChange(new PriceChange(product.ProductId, 0, supplierRetailPrice, DateTime.Now, true));
             }
             product.SupplierRetailPrice = supplierRetailPrice;
 
+
+            product.SupplierWholesalePrice = float.Parse(node.ChildNodes.Item(5).InnerText.Trim(), CultureInfo.InvariantCulture);
+
+
             product.IsVisible = node.ChildNodes.Item(10).InnerText.Trim() == "1" ? true : false;
+
+            Save();
         }
 
         private bool disposed = false;

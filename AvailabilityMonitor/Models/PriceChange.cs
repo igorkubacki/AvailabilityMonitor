@@ -15,12 +15,13 @@ namespace AvailabilityMonitor.Models
         public int ProductId { get; set; }
         public virtual Product? product { get; set; }
 
-        public PriceChange(int productId, float previousPrice, float newPrice, DateTime dateTime)
+        public PriceChange(int productId, float previousPrice, float newPrice, DateTime dateTime, bool isNotificationRead)
         {
             ProductId = productId;
             PreviousPrice = previousPrice;
             NewPrice = newPrice;
             DateTime = dateTime;
+            IsNotificationRead = isNotificationRead;
         }
     }
 }

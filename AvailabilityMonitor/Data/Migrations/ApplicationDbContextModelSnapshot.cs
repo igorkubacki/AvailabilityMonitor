@@ -86,11 +86,14 @@ namespace AvailabilityMonitor.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"), 1L, 1);
 
+                    b.Property<string>("AvailabilityLabel")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Index")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsVisible")
+                    b.Property<bool?>("IsVisible")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")

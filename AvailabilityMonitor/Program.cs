@@ -1,4 +1,3 @@
-using AvailabilityMonitor.Services;
 using AvailabilityMonitor.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +10,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseLazyLoadingProxies().UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// here
-// builder.Services.AddHostedService<ImportingService>();
-// builder.Services.AddSingleton<IWorker, Worker>();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
