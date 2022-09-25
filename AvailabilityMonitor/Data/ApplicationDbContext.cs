@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using AvailabilityMonitor.Models;
 
 namespace AvailabilityMonitor.Data
 {
@@ -13,5 +14,6 @@ namespace AvailabilityMonitor.Data
         public DbSet<AvailabilityMonitor.Models.Config>? Config { get; set; }
         public DbSet<AvailabilityMonitor.Models.PriceChange>? PriceChange { get; set; }
         public DbSet<AvailabilityMonitor.Models.QuantityChange>? QuantityChange { get; set; }
+        public DbSet<AvailabilityMonitor.Models.LoginModel> LoginModel { get; set; }
     }
 }

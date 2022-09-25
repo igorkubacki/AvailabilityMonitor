@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "ytanda4mb0/6FBFRfip3WZjD5oyFAfmZ6NJHXpzfObk=",
+  "Hash": "dGBpiuhFWJF+zB19eB2QYY3UnScc6JhsWE2DMTIp4+A=",
   "Source": "AvailabilityMonitor",
   "BasePath": "_content/AvailabilityMonitor",
   "Mode": "Default",
@@ -1088,23 +1088,6 @@
       "OriginalItemSpec": "wwwroot\\css\\site.css"
     },
     {
-      "Identity": "C:\\Users\\Igor\\source\\repos\\AvailabilityMonitor\\AvailabilityMonitor\\wwwroot\\favicon.ico",
-      "SourceId": "AvailabilityMonitor",
-      "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\Igor\\source\\repos\\AvailabilityMonitor\\AvailabilityMonitor\\wwwroot\\",
-      "BasePath": "_content/AvailabilityMonitor",
-      "RelativePath": "favicon.ico",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\favicon.ico"
-    },
-    {
       "Identity": "C:\\Users\\Igor\\source\\repos\\AvailabilityMonitor\\AvailabilityMonitor\\wwwroot\\js\\site.js",
       "SourceId": "AvailabilityMonitor",
       "SourceType": "Discovered",
@@ -2089,40 +2072,6 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\lib\\jquery-validation-unobtrusive\\LICENSE.txt"
-    },
-    {
-      "Identity": "C:\\Users\\Igor\\source\\repos\\AvailabilityMonitor\\AvailabilityMonitor\\wwwroot\\logo.JPG",
-      "SourceId": "AvailabilityMonitor",
-      "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\Igor\\source\\repos\\AvailabilityMonitor\\AvailabilityMonitor\\wwwroot\\",
-      "BasePath": "_content/AvailabilityMonitor",
-      "RelativePath": "logo.JPG",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\logo.JPG"
-    },
-    {
-      "Identity": "C:\\Users\\Igor\\source\\repos\\AvailabilityMonitor\\AvailabilityMonitor\\wwwroot\\logo.svg",
-      "SourceId": "AvailabilityMonitor",
-      "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\Igor\\source\\repos\\AvailabilityMonitor\\AvailabilityMonitor\\wwwroot\\",
-      "BasePath": "_content/AvailabilityMonitor",
-      "RelativePath": "logo.svg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\logo.svg"
     }
   ]
 }

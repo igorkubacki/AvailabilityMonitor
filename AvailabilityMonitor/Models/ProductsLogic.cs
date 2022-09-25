@@ -56,7 +56,19 @@ namespace AvailabilityMonitor.Models
         {
             if(productId != null)
             {
+                // Deleting product.
                 _context.Product.Remove(_context.Product.Find(productId));
+
+                // Deleting all price and quantity changes for product.
+                foreach(PriceChange change in GetPriceChangesForProduct((int)productId))
+                {
+                    _context.PriceChange.Remove(change);
+                }
+                foreach (QuantityChange change in GetQuantityChangesForProduct((int)productId))
+                {
+                    _context.QuantityChange.Remove(change);
+                }
+
                 Save();
             }
         }

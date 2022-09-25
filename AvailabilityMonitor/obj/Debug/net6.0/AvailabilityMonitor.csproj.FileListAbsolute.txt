@@ -105,7 +105,6 @@ C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net
 C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\MessagePack.dll
 C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\MessagePack.Annotations.dll
 C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Microsoft.AspNetCore.Razor.Language.dll
-C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Microsoft.Build.Locator.dll
 C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Microsoft.CodeAnalysis.AnalyzerUtilities.dll
 C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Microsoft.CodeAnalysis.dll
 C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Microsoft.CodeAnalysis.CSharp.dll
@@ -344,3 +343,8 @@ C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net
 C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Microsoft.Owin.Host.SystemWeb.dll
 C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Microsoft.Owin.Security.dll
 C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Owin.dll
+C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Firebase.Auth.dll
+C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Microsoft.Build.dll
+C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Microsoft.Build.Framework.dll
+C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\Microsoft.NET.StringTools.dll
+C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Debug\net6.0\System.ServiceModel.dll
