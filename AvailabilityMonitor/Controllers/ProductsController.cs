@@ -10,7 +10,6 @@ namespace AvailabilityMonitor.Controllers
     public class ProductsController : Controller
     {
         private readonly BusinessLogic _businessLogic;
-        private FirebaseAuthProvider _auth;
         private static readonly string[] months = {
             "Jan",
             "Feb",
@@ -28,7 +27,6 @@ namespace AvailabilityMonitor.Controllers
         public ProductsController(ApplicationDbContext context)
         {
             _businessLogic = new BusinessLogic(context);
-            _auth = new FirebaseAuthProvider(new FirebaseConfig("AIzaSyDV25Lg8hXe7-85OCyuFySDPboHIvBIhws"));
         }
         public ActionResult Index(string? sortOrder, string name, string index, int? prestashopId, float? priceFrom, float? priceTo, 
             int? quantityFrom, int? quantityTo, int? page, int? pageSize)
