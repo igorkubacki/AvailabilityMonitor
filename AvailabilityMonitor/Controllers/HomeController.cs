@@ -16,9 +16,10 @@ namespace AvailabilityMonitor.Controllers
 
         public IActionResult Index()
         {
+            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "C:/Users/Igor/Dropbox/Komputer/Downloads/availability-monitor-7231f-ad6a7d6a6f03.json");
             return View();
         }
-                
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

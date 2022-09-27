@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "public": "AvailabilityMonitor/release/wwwroot",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

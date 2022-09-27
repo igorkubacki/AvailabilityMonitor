@@ -12,7 +12,6 @@ namespace AvailabilityMonitor.Models
     public partial class BusinessLogic : IDisposable
     {
         private ApplicationDbContext _context;
-        public Config completed;
 
         public BusinessLogic(ApplicationDbContext context)
         {
@@ -187,7 +186,7 @@ namespace AvailabilityMonitor.Models
                         }
                         else
                         {
-                            _context.Product.Add(new Product(productId, index, name, photoURL, stockavailableId, quantity, retailPrice, availabilityLabel));
+                            InsertProduct(new Product(productId, index, name, photoURL, stockavailableId, quantity, retailPrice, availabilityLabel));
                         }
                     }
                     else

@@ -5,6 +5,6 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
 <Project>
   <PropertyGroup>
     <_PublishTargetUrl>C:\Users\Igor\source\repos\AvailabilityMonitor\AvailabilityMonitor\bin\Release\net6.0\publish\AvailabilityMonitor</_PublishTargetUrl>
-    <History>True|2022-09-25T15:40:58.7529575Z;</History>
+    <History>True|2022-09-27T21:01:41.4526965Z;False|2022-09-27T23:00:59.3271580+02:00;True|2022-09-27T22:58:55.1981977+02:00;True|2022-09-27T22:55:42.2455633+02:00;True|2022-09-25T17:40:58.7529575+02:00;</History>
   </PropertyGroup>
 </Project>

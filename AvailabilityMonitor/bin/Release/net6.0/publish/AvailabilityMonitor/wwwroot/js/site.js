@@ -11,20 +11,49 @@ var buttonUpdate;
 var message;
 
 
+
 function startUpdate(productId) {
     switchButtons(true);
     message = document.getElementById('importMessage');
     message.innerHTML = 'Update in progress <i class="fa-solid fa-spinner fa-spin"></i>';
     importInfo = document.getElementById('importInfo');
-    importInfo.classList.toggle('show');
+    if (!importInfo.classList.contains('show')) {
+        importInfo.classList.toggle('show');
+    }
     importInfo.style.animationDuration = '1s';
 
-    var url = window.location.origin + '/Products/AddSupplierInfo';
+    var url = window.location.origin + '/Products/UpdateAllProductsSupplierInfo';
     var type = 'GET';
     var data = {};
 
     if (productId != null) {
-        url = window.location.origin + '/Products/UpdateProductInfo';
+        url = window.location.origin + '/Products/UpdateProductSupplierInfo';
+        type = 'POST';
+        data = { id: productId };
+    }
+
+    $.ajax({
+        url: url,
+        type: type,
+        data: data,
+    }).done(operationDone).fail(operationFailed);
+}
+
+
+function startImport(productId) {
+    switchButtons(true);
+    message = document.getElementById('importMessage');
+    message.innerHTML = 'Import in progress <i class="fa-solid fa-spinner fa-spin"></i>';
+    importInfo = document.getElementById('importInfo');
+    importInfo.classList.toggle('show');
+    importInfo.style.animationDuration = '1s';
+
+    var url = window.location.origin + '/Products/UpdateAllProductsFromPresta';
+    var type = 'GET';
+    var data = {};
+
+    if (productId != null) {
+        url = window.location.origin + '/Products/UpdateProductFromPresta';
         type = 'POST';
         data = { id: productId };
     }
@@ -33,50 +62,29 @@ function startUpdate(productId) {
         url: url,
         type: type,
         data: data
-    }).done(function () {
-        message.innerHTML = 'Done!<br />Refresh to see changes';
-        switchButtons(false);
-        setTimeout(function () {
-            importInfo.classList.toggle('show');
-        }, 3000);
-    }).fail(function () {
-        message.innerHTML = 'Something went wrong<br />Check your configuration';
-        switchButtons(false);
-        setTimeout(function () {
-            importInfo.classList.toggle('show');
-        }, 5000);
-    });
+    }).done(operationDone).fail(operationFailed);
 }
 
-
-function startImport() {
-    switchButtons(true);
-    message = document.getElementById('importMessage');
-    message.innerHTML = 'Import in progress <i class="fa-solid fa-spinner fa-spin"></i>';
-    importInfo = document.getElementById('importInfo');
-    importInfo.classList.toggle('show');
-    importInfo.style.animationDuration = '1s';
-    Import();
+function operationDone() {
+    message.innerHTML = 'Done!';
+    switchButtons(false);
+    setTimeout(function () {
+        if (message.innerHTML === 'Done!') {
+            importInfo.classList.toggle('show');
+        }
+    }, 3000);
 }
 
-function Import() {
-    $.ajax({
-        url: window.location.origin + '/Products/ImportProducts',
-    }).done(function () {
-        message.innerHTML = 'Done!';
-        setTimeout(function () {
+function operationFailed() {
+    message.innerHTML = 'Something went wrong<br />Check your configuration';
+    switchButtons(false);
+    setTimeout(function () {
+        if (message.innerHTML === 'Something went wrong<br />Check your configuration') {
             importInfo.classList.toggle('show');
-        }, 3000);
-
-        switchButtons(false);
-    }).fail(function () {
-        message.innerHTML = 'Something went wrong<br />Check your configuration';
-        switchButtons(false);
-        setTimeout(function () {
-            importInfo.classList.toggle('show');
-        }, 5000);
-    });
+        }
+    }, 5000);
 }
+
 
 function switchButtons(disable) {
     buttonImport = document.getElementById('import-button');
@@ -85,6 +93,12 @@ function switchButtons(disable) {
     buttonUpdate = document.getElementById('update-button');
     buttonUpdate.disabled = disable;
     buttonUpdate.classList.toggle('inactive-button');
+
+    var buttonDelete = document.getElementById('delete-button');
+    if (buttonDelete) {
+        buttonDelete.disabled = disable;
+        buttonDelete.classList.toggle('inactive-button');
+    }
 }
 
 function zoomPhoto(id) {
@@ -92,7 +106,7 @@ function zoomPhoto(id) {
     popup.classList.toggle('show');
 }
 
-window.updateSorting = function (e) {
+function updateSorting(e) {
     var url = window.location.href;
     var paramName = 'sortOrder';
     var pattern = new RegExp('\\b(' + paramName + '=).*?(&|#|$)');
@@ -132,12 +146,21 @@ function copyIndex(id) {
 }
 
 function deleteProduct(productId) {
+    message = document.getElementById('importMessage');
+    message.innerHTML = 'Deleting product <i class="fa - solid fa - spinner fa - spin"></i>';
+    importInfo = document.getElementById('importInfo');
+    if (!importInfo.classList.contains('show')) {
+        importInfo.classList.toggle('show');
+    }
     $.ajax({
         url: window.location.origin + '/Products/Delete',
         type: 'POST',
-        data: { id: productId}
+        data: { id: productId }
     }).done(function () {
-        window.location.href = document.referrer;
+        message.innerHTML = 'Product deleted';
+        setTimeout(function () {
+            window.location.href = window.location.origin + '/Products';
+        }, 3000);
     })
 }
 
