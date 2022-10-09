@@ -7,7 +7,6 @@ There is a newer, re-created version of the app using Firebase instead of Entity
 * [General info](#-general-info)
 * [Features](#-features)
 * [How it works](#%EF%B8%8F-how-it-works)
-* [Screenshots](#-screenshots) 
 * [Technologies](#-technologies)
 
 ## 📄 General info
